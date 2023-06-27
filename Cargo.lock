@@ -52,10 +52,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "autocfg"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
+
+[[package]]
 name = "binary-analysis-rs"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "clap-num",
 ]
 
 [[package]]
@@ -79,6 +86,15 @@ dependencies = [
  "clap_builder",
  "clap_derive",
  "once_cell",
+]
+
+[[package]]
+name = "clap-num"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "488557e97528174edaa2ee268b23a809e0c598213a4bbcb4f34575a46fda147e"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -185,6 +201,15 @@ name = "linux-raw-sys"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
+
+[[package]]
+name = "num-traits"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
+dependencies = [
+ "autocfg",
+]
 
 [[package]]
 name = "once_cell"
