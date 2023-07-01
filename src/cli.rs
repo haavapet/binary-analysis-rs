@@ -6,6 +6,7 @@ use clap_num::maybe_hex;
 pub enum Endiannes {
     Little,
     Big,
+    Unknown
 }
 
 #[derive(Parser)]
@@ -15,16 +16,17 @@ pub enum Endiannes {
           override_usage="binary-analysis-rs <FILE_PATH> -e <ENDIANNES> -i <INSTR_LEN> -o <OPCODE_LEN>",
           after_help="TODO How to use this program"
          )]
+         // TODO GIVE all values more explicit names, and just deconstruct them in function prologues instead
 pub struct Parameters {
     // REQUIRED
-    #[arg()] // TODO change this to Option<PathBuf> oor Option<Path>
-    pub file_path: Option<PathBuf>,
+    #[arg()]
+    pub file_path: PathBuf,
 
     //#[command(flatten)]
     // pub struct... instead, for better coherence
     
-    #[arg(short = 'i', long, value_name="int", help="Instruction Length")]
-    pub instr_len: Option<u32>,
+    #[arg(short = 'i', long, required=true, value_name="int", help="Instruction Length")]
+    pub instr_len: u32,
 
     #[arg(short = 'o', required_unless_present_all=["ret_opcode_index", "call_opcode_index", "call_operand_index"])]
     pub opcode_len: Option<u32>,
@@ -32,8 +34,8 @@ pub struct Parameters {
 
     // OPTIONAL
 
-    #[arg(short = 'e', long, required=false, value_enum)]
-    pub endiannes: Option<Endiannes>,
+    #[arg(short = 'e', long, default_value="unknown", value_enum)]
+    pub endiannes: Endiannes,
     
     // If one needs to be more explicit about which bits are part of return opcode
     #[arg(long, number_of_values=2, required=false)]
@@ -77,19 +79,28 @@ pub struct Parameters {
     pub ret_search_range: Option<u32>,
 
     // Distance from function prologue to prvious ret
-    #[arg(long, number_of_values=2, default_value="5")]
+    #[arg(long, default_value="5")]
     pub ret_func_dist: Option<u32>,
     
-    #[arg(long, required=false, conflicts_with="file_offset")]
-    pub unknown_code_entry: bool,
+    #[arg(long, default_value="false", conflicts_with="file_offset")] // num_args=0??
+    pub unknown_code_entry: Option<bool>,
 
     #[arg(long, default_value="false")]
-    pub include_instructions: bool,
+    pub include_instructions: Option<bool>,
 
     #[arg(long, default_value="false")]
-    pub is_absolute_addressing: bool,
+    pub is_absolute_addressing: Option<bool>,
 }
 
+impl Parameters {
+    fn test(&self) {
+        println!("called method on parameters struct");
+    }
+}
+
+// TODO parse into a new struct instead, with i.e enum instruction format that can be matched
 pub fn parse_parameters() -> Parameters {
-    Parameters::parse()
+    let params = Parameters::parse();
+    params.test();
+    params
 }
