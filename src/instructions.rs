@@ -29,20 +29,19 @@ pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, cli_params: &'a Para
 }
 
 pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: u32) -> Vec<u64> {
-    // TODO implement all paths, i.e 8, 16, 32, 64 bit, and both endiannes for each
     let extraction_function = match endiannes {
         Endiannes::Big => match instr_len {
-            8 => to_be_bytes_8,
-            16 => to_be_bytes_16,
-            32 => unimplemented!(),
-            64 => unimplemented!(),
+            8 => from_be_bytes_8,
+            16 => from_be_bytes_16,
+            32 => from_be_bytes_32,
+            64 => from_be_bytes_64,
             _ => unreachable!("Instr_len should only be one of [8, 16, 32, 64]")
         },
         Endiannes::Little => match instr_len {
-            8 => unimplemented!(),
-            16 => unimplemented!(),
-            32 => unimplemented!(),
-            64 => unimplemented!(),
+            8 => from_le_bytes_8,
+            16 => from_le_bytes_16,
+            32 => from_le_bytes_32,
+            64 => from_le_bytes_64,
             _ => unreachable!("Instr_len should only be one of [8, 16, 32, 64]")
         },
         _ => unreachable!("This function should never be called with <UNKNOWN> endiannes")
@@ -54,13 +53,41 @@ pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &End
     .collect()
 }
 
-fn to_be_bytes_16(data: &[u8]) -> u64 {
+fn from_be_bytes_64(data: &[u8]) -> u64 {
+    return u64::from_be_bytes(data.try_into().unwrap()) as u64;
+}
+
+fn from_be_bytes_32(data: &[u8]) -> u64 {
+    return u32::from_be_bytes(data.try_into().unwrap()) as u64;
+}
+
+fn from_be_bytes_16(data: &[u8]) -> u64 {
     return u16::from_be_bytes(data.try_into().unwrap()) as u64;
 }
 
-fn to_be_bytes_8(data: &[u8]) -> u64 {
+fn from_be_bytes_8(data: &[u8]) -> u64 {
     return u8::from_be_bytes(data.try_into().unwrap()) as u64;
 }
+
+fn from_le_bytes_64(data: &[u8]) -> u64 {
+    return u64::from_le_bytes(data.try_into().unwrap()) as u64;
+}
+
+fn from_le_bytes_32(data: &[u8]) -> u64 {
+    return u32::from_le_bytes(data.try_into().unwrap()) as u64;
+}
+
+fn from_le_bytes_16(data: &[u8]) -> u64 {
+    return u16::from_le_bytes(data.try_into().unwrap()) as u64;
+}
+
+fn from_le_bytes_8(data: &[u8]) -> u64 {
+    return u8::from_le_bytes(data.try_into().unwrap()) as u64;
+}
+
+
+
+
 // Maybe this will work
 // https://crates.io/crates/enum_dispatch
 // allows to call methods for enum variants
