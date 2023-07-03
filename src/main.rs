@@ -1,6 +1,6 @@
-use crate::instructions::iter_potential_instructions;
+use crate::extract_instructions::iter_potential_instructions;
 
-mod instructions;
+mod extract_instructions;
 mod file;
 mod cli;
 
