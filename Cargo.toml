@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.3.8", features = ["derive"] }
 clap-num = "1.0.2"
+itertools = "0.11.0"

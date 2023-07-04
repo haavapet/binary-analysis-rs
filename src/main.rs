@@ -1,16 +1,27 @@
-use crate::extract_instructions::iter_potential_instructions;
 
+mod prelude;
 mod extract_instructions;
 mod file;
 mod cli;
+mod instructions;
+mod config;
+mod endiannes;
+
+use prelude::*;
+use crate::extract_instructions::iter_potential_instructions;
 
 fn main() {
-    let cli_params = cli::parse_parameters();
+    let config = Config::get();
 
-    let binary = file::read_file(&cli_params);
-
-    for i in iter_potential_instructions(&binary, &cli_params){
-        println!("TEST {:#06x?}", &i[0 as usize..5 as usize])
+    let binary = file::read_file(&config);
+    
+    for potential_instructions in iter_potential_instructions(&binary, &config){
+        for call_candidates in instructions::call_candidates(&potential_instructions, &config){
+            // potential_edges()     pc_inc, pc_offet, is_relative, call_operand_mask 
+            // ret_candidates()      ret_search_range
+            // filter_edges          ret_func_dist
+            // 
+        }
     }
 
     // for potential_instructions in binary.extract_potential_instructios(){

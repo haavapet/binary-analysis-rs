@@ -1,34 +1,46 @@
-use crate::cli::{Parameters, Endiannes};
+use crate::prelude::*;
 
 // hopefully this will let us lazy evaluate instructions, so we save up to 75% memory (for 32bit instr)
-pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, cli_params: &'a Parameters) -> impl 'a + Iterator<Item = Vec<u64>> {
-    if cli_params.unknown_code_entry.unwrap(){
+pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, config: &'a Config) -> impl 'a + Iterator<Item = Vec<u64>> {
+    // Destructure CLI params we need
+    let Config { unknown_code_entry, 
+                     file_offset,
+                     endiannes,
+                     instr_len,
+                     .. } = config;
+    
+    if *unknown_code_entry {
         // TODO implement possible code starts for unknown code entry
         // let possible_code_start = vec![(file_offset / instr_byte_len, file_offset_end / instr_byte_len)];
         todo!("Implement additional search when code entry unknown is set");
     }
 
-    let instr_byte_len = cli_params.instr_len / 8;
+    // TODO how to handle exact file offset given, do we still iterate over bytes???
+    // if file_offset.is_some() {
+    //     todo!("Implement file offset")
+    // } 
+
+    let instr_byte_len = instr_len / BYTE_SIZE;
 
     // Iterates over byte entry points. I.e to get alignment right for a 32 bit instruction length. 
     // possible instructions start at byte 0, 1, 2, 3.
     let iter_closure = |endiannes| (0..instr_byte_len).filter_map(move |i| match i.cmp(&(instr_byte_len)) {
-        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary(&binary[i as usize..], &endiannes, cli_params.instr_len)),
+        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary(&binary[i as usize..], &endiannes, instr_len)),
         _ => None
     });
 
     // If unknown endiannes we chain both big and little endian iterator
-    if let Endiannes::Unknown = cli_params.endiannes {
+    if let Endiannes::Unknown = endiannes {
         return Box::new(iter_closure(Endiannes::Big)
                             .chain(iter_closure(Endiannes::Little))
                         ) as Box<dyn Iterator<Item = Vec<u64>>>
     }
 
     // Else we just return <ENDIANNES> endiannes iterator
-    Box::new(iter_closure(cli_params.endiannes)) as Box<dyn Iterator<Item = Vec<u64>>>
+    Box::new(iter_closure(*endiannes)) as Box<dyn Iterator<Item = Vec<u64>>>
 }
 
-pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: u32) -> Vec<u64> {
+pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: &u32) -> Vec<u64> {
     let extraction_function = match endiannes {
         Endiannes::Big => match instr_len {
             8 => from_be_bytes_8,
@@ -85,6 +97,13 @@ fn from_le_bytes_8(data: &[u8]) -> u64 {
     return u8::from_le_bytes(data.try_into().unwrap()) as u64;
 }
 
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn trivial() {
+        assert_eq!(1, 1)
+    }
+}
 
 
 
