@@ -1,4 +1,4 @@
-use clap::{ValueEnum};
+use clap::ValueEnum;
 
 #[derive(Clone, Copy, ValueEnum)]
 pub enum Endiannes {

@@ -4,10 +4,10 @@ use crate::prelude::*;
 pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, config: &'a Config) -> impl 'a + Iterator<Item = Vec<u64>> {
     // Destructure CLI params we need
     let Config { unknown_code_entry, 
-                     file_offset,
-                     endiannes,
-                     instr_len,
-                     .. } = config;
+                 file_offset,
+                 endiannes,
+                 instr_len,
+                 .. } = config;
     
     if *unknown_code_entry {
         // TODO implement possible code starts for unknown code entry
@@ -21,11 +21,13 @@ pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, config: &'a Config) 
     // } 
 
     let instr_byte_len = instr_len / BYTE_SIZE;
+    let file_start = file_offset[0];
+    let file_end = file_offset[1];
 
     // Iterates over byte entry points. I.e to get alignment right for a 32 bit instruction length. 
-    // possible instructions start at byte 0, 1, 2, 3.
+    // possible instructions start at byte 0, 1, 2, 3.                      //TODOOOO CHANGE TO INSTR_BYE_LEN
     let iter_closure = |endiannes| (0..instr_byte_len).filter_map(move |i| match i.cmp(&(instr_byte_len)) {
-        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary(&binary[i as usize..], &endiannes, instr_len)),
+        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary(&binary[file_start + (i  as usize)..file_end], &endiannes, instr_len)),
         _ => None
     });
 
@@ -40,7 +42,7 @@ pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, config: &'a Config) 
     Box::new(iter_closure(*endiannes)) as Box<dyn Iterator<Item = Vec<u64>>>
 }
 
-pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: &u32) -> Vec<u64> {
+pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: &u64) -> Vec<u64> {
     let extraction_function = match endiannes {
         Endiannes::Big => match instr_len {
             8 => from_be_bytes_8,
