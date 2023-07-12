@@ -9,5 +9,5 @@ pub fn read_file(config: &Config) -> Vec<u8> {
 }
 
 pub fn read_file_len(file_path: &PathBuf) -> usize {
-    std::fs::metadata(&file_path).expect("file does not exist").len() as usize
+    std::fs::metadata(file_path).expect("file does not exist").len() as usize
 }

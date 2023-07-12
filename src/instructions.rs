@@ -3,7 +3,13 @@ use std::ops::Neg;
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
-pub fn call_candidates(instructions: &Vec<u64>, config: &Config) -> Vec<(u64, usize)> {
+pub fn get_candidates(instructions: &[u64], config: &Config) -> (Vec<(u64, usize)>, Vec<(u64, usize)>) {
+    let call_cand = call_candidates(instructions, config);
+    let ret_cand = ret_candidates(instructions, config);
+    (call_cand, ret_cand)
+}
+
+pub fn call_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
     let Config { call_opcode_mask, 
                  call_search_range,
@@ -20,8 +26,8 @@ pub fn call_candidates(instructions: &Vec<u64>, config: &Config) -> Vec<(u64, us
         .filter(|(c, _)| c > &1)
         .sorted_by_key(|&(_, count)| count)
         .rev()
-        .skip(call_search_range[0] as usize)
-        .take(call_search_range[1] as usize)
+        .skip(call_search_range[0])
+        .take(call_search_range[1])
         .collect()
 
     // OPTION 2: BtreeMap instead of HashMap, slower by ~40% when testing on curl_aarch64 binary
@@ -62,7 +68,7 @@ pub fn call_candidates(instructions: &Vec<u64>, config: &Config) -> Vec<(u64, us
     // heap.iter().map(|(std::cmp::Reverse(c), k)| (c.clone(), k.clone())).collect()
 }
 
-pub fn ret_candidates(instructions: &Vec<u64>, config: &Config) -> Vec<(u64, usize)> {
+pub fn ret_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
     let Config { ret_opcode_mask, 
                  ret_search_range,
@@ -78,13 +84,13 @@ pub fn ret_candidates(instructions: &Vec<u64>, config: &Config) -> Vec<(u64, usi
         .filter(|(_, c)| c > &1) // Optimization, most instructions are unique, not need to consider them as return instruction
         .sorted_by_key(|&(_, count)| count)
         .rev()
-        .skip(ret_search_range[0] as usize)
-        .take(ret_search_range[1] as usize)
+        .skip(ret_search_range[0])
+        .take(ret_search_range[1])
         .collect()
 }
 
 // TODO move to file call_edges.rs and have call edges struct
-pub fn find_potential_edges(instructions: &Vec<u64>, call_candidate: u64, config: &Config) -> Vec<(usize, usize)> {
+pub fn find_potential_edges(instructions: &[u64], call_candidate: u64, config: &Config) -> Vec<(usize, usize)> {
     // Destructure CLI params we need
     let Config { call_opcode_mask,
                  call_operand_mask,
@@ -94,15 +100,15 @@ pub fn find_potential_edges(instructions: &Vec<u64>, call_candidate: u64, config
                  left_shift_call_operand,
                  is_absolute_addressing,
                  .. } = config;
-    let pc_inc: i64 = pc_inc.clone() as i64;
-    let call_operand_mask = call_operand_mask.clone() as u64;
-    let call_operand_signed_mask = call_operand_signed_mask.clone() as i64;
+    let pc_inc = *pc_inc as i64;
+    let &call_operand_mask = call_operand_mask;
+    let call_operand_signed_mask = *call_operand_signed_mask as i64;
     if *is_absolute_addressing {
         println!("USE {}", pc_offset);
         unimplemented!();
     } else {
         let itosi = |x: u64, mask: i64| {
-            let mut signed: i64 = x.clone() as i64;
+            let mut signed: i64 = x as i64;
             if signed > mask {
                 signed |= mask.neg();
             }
@@ -118,7 +124,7 @@ pub fn find_potential_edges(instructions: &Vec<u64>, call_candidate: u64, config
                 let address = ((signed_operand << left_shift_call_operand) / pc_inc) + i as i64;
                 if 0 <= address && address < instructions.len() as i64
                     && (i as i64 - address).abs() > 4 {
-                        potential_edges.push((i as usize, address as usize));
+                        potential_edges.push((i, address as usize));
                     }
             }
         }
@@ -126,7 +132,7 @@ pub fn find_potential_edges(instructions: &Vec<u64>, call_candidate: u64, config
     }
 }
 
-pub fn filter_valid_edges(instructions: &Vec<u64>, ret_opcode: u64, config: &Config, potential_call_edges: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
+pub fn filter_valid_edges(instructions: &[u64], ret_opcode: u64, config: &Config, potential_call_edges: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
     let Config { ret_func_dist,
                  ret_opcode_mask,
                  .. } = config;
@@ -134,8 +140,8 @@ pub fn filter_valid_edges(instructions: &Vec<u64>, ret_opcode: u64, config: &Con
     let mut valid_call_edges: Vec<(usize, usize)> = Vec::new();
 
     for (from_edge, to_edge) in potential_call_edges {
-        let to_edge = to_edge.clone();
-        let from_edge = from_edge.clone();
+        let &to_edge = to_edge;
+        let &from_edge = from_edge;
         let is_first_instruction = to_edge == 0;
         for i in 1..(ret_func_dist + 1) {
             if ((to_edge as i64) - i as i64 >= 0) && (instructions[to_edge - i] & ret_opcode_mask == ret_opcode) || is_first_instruction {

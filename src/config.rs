@@ -62,7 +62,7 @@ impl Config {
         let call_operand_signed_mask: u64 = (1 << (instr_len - col - 1)) - 1;
 
 
-        let file_offset_new: [usize; 2] = if let Some(value) = file_offset {
+        let file_offset: [usize; 2] = if let Some(value) = file_offset {
             value.try_into().unwrap()
         } else if unknown_code_entry { 
             unimplemented!();
@@ -72,24 +72,24 @@ impl Config {
 
 
         Config { 
-            file_path: file_path, 
-            instr_len: instr_len, 
-            call_opcode_mask: call_opcode_mask, 
-            ret_opcode_mask: ret_opcode_mask, 
-            call_operand_mask: call_operand_mask,
+            file_path, 
+            instr_len, 
+            call_opcode_mask, 
+            ret_opcode_mask, 
+            call_operand_mask,
             call_operand_signed_mask, 
-            endiannes: endiannes, 
-            file_offset: file_offset_new, 
-            pc_offset: pc_offset, 
+            endiannes, 
+            file_offset, 
+            pc_offset, 
             pc_inc: if let Some(value) = pc_inc {value} else {instr_len / BYTE_SIZE}, 
-            left_shift_call_operand: left_shift_call_operand, 
+            left_shift_call_operand, 
             nr_cand, 
             call_search_range: call_search_range.try_into().unwrap(), 
             ret_search_range: ret_search_range.try_into().unwrap(), 
-            ret_func_dist: ret_func_dist, 
-            unknown_code_entry: unknown_code_entry, 
-            include_instructions: include_instructions, 
-            is_absolute_addressing: is_absolute_addressing 
+            ret_func_dist, 
+            unknown_code_entry, 
+            include_instructions, 
+            is_absolute_addressing 
         }
     }
 }

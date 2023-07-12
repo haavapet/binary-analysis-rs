@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 // hopefully this will let us lazy evaluate instructions, so we save up to 75% memory (for 32bit instr)
-pub fn iter_potential_instructions<'a>(binary: &'a Vec<u8>, config: &'a Config) -> impl 'a + Iterator<Item = Vec<u64>> {
+pub fn iter_potential_instructions<'a>(binary: &'a [u8], config: &'a Config) -> impl 'a + Iterator<Item = Vec<u64>> {
     // Destructure CLI params we need
     let Config { unknown_code_entry, 
                  file_offset,
@@ -63,40 +63,40 @@ pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &End
     
     binary
     .chunks_exact((instr_len / 8) as usize)
-    .map(|x| extraction_function(x))
+    .map(extraction_function)
     .collect()
 }
 
 fn from_be_bytes_64(data: &[u8]) -> u64 {
-    return u64::from_be_bytes(data.try_into().unwrap()) as u64;
+    u64::from_be_bytes(data.try_into().unwrap())
 }
 
 fn from_be_bytes_32(data: &[u8]) -> u64 {
-    return u32::from_be_bytes(data.try_into().unwrap()) as u64;
+    u32::from_be_bytes(data.try_into().unwrap()) as u64
 }
 
 fn from_be_bytes_16(data: &[u8]) -> u64 {
-    return u16::from_be_bytes(data.try_into().unwrap()) as u64;
+    u16::from_be_bytes(data.try_into().unwrap()) as u64
 }
 
 fn from_be_bytes_8(data: &[u8]) -> u64 {
-    return u8::from_be_bytes(data.try_into().unwrap()) as u64;
+    u8::from_be_bytes(data.try_into().unwrap()) as u64
 }
 
 fn from_le_bytes_64(data: &[u8]) -> u64 {
-    return u64::from_le_bytes(data.try_into().unwrap()) as u64;
+    u64::from_le_bytes(data.try_into().unwrap())
 }
 
 fn from_le_bytes_32(data: &[u8]) -> u64 {
-    return u32::from_le_bytes(data.try_into().unwrap()) as u64;
+    u32::from_le_bytes(data.try_into().unwrap()) as u64
 }
 
 fn from_le_bytes_16(data: &[u8]) -> u64 {
-    return u16::from_le_bytes(data.try_into().unwrap()) as u64;
+    u16::from_le_bytes(data.try_into().unwrap()) as u64
 }
 
 fn from_le_bytes_8(data: &[u8]) -> u64 {
-    return u8::from_le_bytes(data.try_into().unwrap()) as u64;
+    u8::from_le_bytes(data.try_into().unwrap()) as u64
 }
 
 #[cfg(test)]
