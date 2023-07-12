@@ -18,12 +18,7 @@ fn main() {
     
     for potential_instructions in iter_potential_instructions(&binary, &config){
         let (call_cand, ret_cand) = instructions::get_candidates(&potential_instructions, &config);
-        if let Some(usage) = memory_stats::memory_stats() {
-            println!("Current physical memory usage: {}", usage.physical_mem);
-            println!("Current virtual memory usage: {}", usage.virtual_mem);
-        } else {
-            println!("Couldn't get the current memory usage :(");
-        }
+
         for &(call_candidate, call_count) in call_cand.iter() {
             let potential_edges = instructions::find_potential_edges(&potential_instructions, call_candidate, &config);
             for &(ret_candidate, _) in ret_cand.iter() {
