@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 // hopefully this will let us lazy evaluate instructions, so we save up to 75% memory (for 32bit instr)
-pub fn iter_potential_instructions<'a, T: PrimInt + FromBytes>(binary: &'a [u8], config: &'a Config) -> impl 'a + Iterator<Item = Vec<impl PrimInt>>
+pub fn iter_potential_instructions<'a, T: FromBytes>(binary: &'a [u8], config: &'a Config) -> impl 'a + Iterator<Item = Vec<impl PrimInt>>
         where <T as FromBytes>::Output: PrimInt, T: 'a {
     // Destructure CLI params we need
     let Config { unknown_code_entry, 
@@ -44,18 +44,18 @@ pub fn iter_potential_instructions<'a, T: PrimInt + FromBytes>(binary: &'a [u8],
     Box::new(iter_closure(*endiannes)) as Box<dyn Iterator<Item = Vec<_>>>
 }
 
-pub fn extract_potential_instructions_from_binary<T: PrimInt + FromBytes>(binary: &[u8], endiannes: &Endiannes, instr_len: &u64) -> Vec<impl PrimInt>
+pub fn extract_potential_instructions_from_binary<T: FromBytes>(binary: &[u8], endiannes: &Endiannes, instr_len: &u64) -> Vec<impl PrimInt>
         where <T as FromBytes>::Output: PrimInt {
-        //where Vec<T>: FromIterator<<T as FromBytes>::Output> {
-    match endiannes {
-        Endiannes::Big => binary
-                            .chunks_exact((instr_len / 8) as usize)
-                            .map(T::from_be_bytes_mine)
-                            .collect(),
-        Endiannes::Little => binary
-                            .chunks_exact((instr_len / 8) as usize)
-                            .map(T::from_le_bytes_mine)
-                            .collect(),
+
+        match endiannes {
+            Endiannes::Big => binary
+                                .chunks_exact((instr_len / BYTE_SIZE) as usize)
+                                .map(T::from_be_bytes_mine)
+                                .collect(),
+            Endiannes::Little => binary
+                                .chunks_exact((instr_len / BYTE_SIZE) as usize)
+                                .map(T::from_le_bytes_mine)
+                                .collect(),
         _ => unreachable!("This function should never be called with <UNKNOWN> endiannes")
     }
 }

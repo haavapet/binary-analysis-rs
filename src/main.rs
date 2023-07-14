@@ -17,15 +17,15 @@ fn main() {
 
     // Call into function that is generic over the instruction length provided
     match config.instr_len {
-        8 => main_generic_over_instruction_length::<u8>(&config),
-        16 => main_generic_over_instruction_length::<u16>(&config),
-        32 => main_generic_over_instruction_length::<u32>(&config),
-        64 => main_generic_over_instruction_length::<u64>(&config),
+        8 => main_generic_over_instruction_length::<u8>(config),
+        16 => main_generic_over_instruction_length::<u16>(config),
+        32 => main_generic_over_instruction_length::<u32>(config),
+        64 => main_generic_over_instruction_length::<u64>(config),
         _ => panic!("Analysis not implemented for instructions of length {}", config.instr_len)
     };
 }
 
-pub fn main_generic_over_instruction_length<T: PrimInt + FromBytes>(config: &Config) 
+pub fn main_generic_over_instruction_length<T: FromBytes>(config: Config) 
         where <T as FromBytes>::Output: PrimInt {
 
     let binary = file::read_file(&config);
