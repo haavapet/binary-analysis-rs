@@ -25,8 +25,8 @@ fn main() {
     };
 }
 
-pub fn main_generic_over_instruction_length<T: FromBytes>(config: Config) 
-        where <T as FromBytes>::Output: PrimInt {
+pub fn main_generic_over_instruction_length<'a, T: FromBytes + 'a>(config: Config) 
+        where <T as FromBytes>::Output: PrimInt + Send + Sync {
 
     let binary = file::read_file(&config);
 
@@ -34,6 +34,7 @@ pub fn main_generic_over_instruction_length<T: FromBytes>(config: Config)
 
 
     for potential_instructions in iter_potential_instructions::<T>(&binary, &config){
+
         // One possibility, move all this code into a function, and match here on 
         let (call_cand, ret_cand) = instructions::get_candidates(&potential_instructions, &config);
         

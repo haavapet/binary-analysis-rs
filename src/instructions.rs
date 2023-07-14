@@ -3,7 +3,9 @@ use std::ops::Neg;
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
-pub fn get_candidates(instructions: &[impl PrimInt], config: &Config) -> (Vec<(u64, usize)>, Vec<(u64, usize)>){
+use rayon::prelude::*;
+
+pub fn get_candidates(instructions: &[impl PrimInt + Send + Sync], config: &Config) -> (Vec<(u64, usize)>, Vec<(u64, usize)>){
     let call_cand = call_candidates(instructions, config);
     let ret_cand = ret_candidates(instructions, config);
     (call_cand, ret_cand)
@@ -15,10 +17,10 @@ pub fn call_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u
                  call_search_range,
                  .. } = config;
     
-    
     // OPTION 1, simple solution with FxHasher
-    let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
-    for instr in instructions {
+    let mut counts: FxHashMap::<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
+    for instr in instructions
+    {
         counts.entry(instr.to_u64().unwrap() & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
 
@@ -69,17 +71,19 @@ pub fn call_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u
     // heap.iter().map(|(std::cmp::Reverse(c), k)| (c.clone(), k.clone())).collect()
 }
 
-pub fn ret_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u64, usize)> {
+pub fn ret_candidates(instructions: &[impl PrimInt + Send + Sync], config: &Config) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
     let Config { ret_opcode_mask, 
                  ret_search_range,
                  .. } = config;
 
 
-    let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(8192, Default::default());
-    for instr in instructions {
-        counts.entry(instr.to_u64().unwrap() & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
-    }
+    let counts: dashmap::DashMap<u64, usize> = dashmap::DashMap::with_capacity_and_hasher(1024, Default::default());
+    instructions.par_chunks(1_000_000).for_each(|instr| {
+        for i in instr {
+            counts.entry(i.to_u64().unwrap() & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
+        }
+    });
     counts
         .into_iter()
         .filter(|(_, c)| c > &1) // Optimization, most instructions are unique, not need to consider them as return instruction
