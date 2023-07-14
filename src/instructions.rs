@@ -3,22 +3,23 @@ use std::ops::Neg;
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
-pub fn get_candidates(instructions: &[u64], config: &Config) -> (Vec<(u64, usize)>, Vec<(u64, usize)>) {
+pub fn get_candidates(instructions: &[impl PrimInt], config: &Config) -> (Vec<(u64, usize)>, Vec<(u64, usize)>){
     let call_cand = call_candidates(instructions, config);
     let ret_cand = ret_candidates(instructions, config);
     (call_cand, ret_cand)
 }
 
-pub fn call_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)> {
+pub fn call_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
     let Config { call_opcode_mask, 
                  call_search_range,
                  .. } = config;
     
+    
     // OPTION 1, simple solution with FxHasher
     let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
     for instr in instructions {
-        counts.entry(instr & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
+        counts.entry(instr.to_u64().unwrap() & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
 
     counts
@@ -68,7 +69,7 @@ pub fn call_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize
     // heap.iter().map(|(std::cmp::Reverse(c), k)| (c.clone(), k.clone())).collect()
 }
 
-pub fn ret_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)> {
+pub fn ret_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
     let Config { ret_opcode_mask, 
                  ret_search_range,
@@ -77,7 +78,7 @@ pub fn ret_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)
 
     let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(8192, Default::default());
     for instr in instructions {
-        counts.entry(instr & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
+        counts.entry(instr.to_u64().unwrap() & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
     counts
         .into_iter()
@@ -90,7 +91,7 @@ pub fn ret_candidates(instructions: &[u64], config: &Config) -> Vec<(u64, usize)
 }
 
 // TODO move to file call_edges.rs and have call edges struct
-pub fn find_potential_edges(instructions: &[u64], call_candidate: u64, config: &Config) -> Vec<(usize, usize)> {
+pub fn find_potential_edges(instructions: &[impl PrimInt], call_candidate: u64, config: &Config) -> Vec<(usize, usize)> {
     // Destructure CLI params we need
     let Config { call_opcode_mask,
                  call_operand_mask,
@@ -117,8 +118,8 @@ pub fn find_potential_edges(instructions: &[u64], call_candidate: u64, config: &
 
         let mut potential_edges: Vec<(usize, usize)> = Vec::new();
         for (i, instr) in instructions.iter().enumerate() {
-            if instr & call_opcode_mask == call_candidate {
-                let call_operand = instr & call_operand_mask;
+            if instr.to_u64().unwrap() & call_opcode_mask == call_candidate {
+                let call_operand = instr.to_u64().unwrap() & call_operand_mask;
                 let signed_operand = itosi(call_operand, call_operand_signed_mask);
                 // Maybe i.checked_add(rest) ?? Because we know the result should be unsigned
                 let address = ((signed_operand << left_shift_call_operand) / pc_inc) + i as i64;
@@ -132,19 +133,17 @@ pub fn find_potential_edges(instructions: &[u64], call_candidate: u64, config: &
     }
 }
 
-pub fn filter_valid_edges(instructions: &[u64], ret_opcode: u64, config: &Config, potential_call_edges: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
+pub fn filter_valid_edges(instructions: &[impl PrimInt], ret_opcode: u64, config: &Config, potential_call_edges: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
     let Config { ret_func_dist,
                  ret_opcode_mask,
                  .. } = config;
     
     let mut valid_call_edges: Vec<(usize, usize)> = Vec::new();
 
-    for (from_edge, to_edge) in potential_call_edges {
-        let &to_edge = to_edge;
-        let &from_edge = from_edge;
+    for &(from_edge, to_edge) in potential_call_edges {
         let is_first_instruction = to_edge == 0;
         for i in 1..(ret_func_dist + 1) {
-            if ((to_edge as i64) - i as i64 >= 0) && (instructions[to_edge - i] & ret_opcode_mask == ret_opcode) || is_first_instruction {
+            if ((to_edge as i64) - i as i64 >= 0) && (instructions[to_edge - i].to_u64().unwrap() & *ret_opcode_mask == ret_opcode) || is_first_instruction {
                 valid_call_edges.push((from_edge, to_edge));
                 break;
             }

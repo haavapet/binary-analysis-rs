@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 // hopefully this will let us lazy evaluate instructions, so we save up to 75% memory (for 32bit instr)
-pub fn iter_potential_instructions<'a>(binary: &'a [u8], config: &'a Config) -> impl 'a + Iterator<Item = Vec<u64>> {
+pub fn iter_potential_instructions<'a, T: PrimInt + FromBytes>(binary: &'a [u8], config: &'a Config) -> impl 'a + Iterator<Item = Vec<impl PrimInt>>
+        where <T as FromBytes>::Output: PrimInt, T: 'a {
     // Destructure CLI params we need
     let Config { unknown_code_entry, 
                  file_offset,
@@ -27,76 +28,82 @@ pub fn iter_potential_instructions<'a>(binary: &'a [u8], config: &'a Config) -> 
     // Iterates over byte entry points. I.e to get alignment right for a 32 bit instruction length. 
     // possible instructions start at byte 0, 1, 2, 3.                      //TODOOOO CHANGE TO INSTR_BYE_LEN
     let iter_closure = |endiannes| (0..instr_byte_len).filter_map(move |i| match i.cmp(&(instr_byte_len)) {
-        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary(&binary[file_start + (i  as usize)..file_end], &endiannes, instr_len)),
+        std::cmp::Ordering::Less => Some(extract_potential_instructions_from_binary::<T>(&binary[file_start + (i  as usize)..file_end], &endiannes, instr_len)),
         _ => None
     });
 
     // If unknown endiannes we chain both big and little endian iterator
+    // Box is used because of difference between chained and non-chained types
     if let Endiannes::Unknown = endiannes {
         return Box::new(iter_closure(Endiannes::Big)
                             .chain(iter_closure(Endiannes::Little))
-                        ) as Box<dyn Iterator<Item = Vec<u64>>>
+                        ) as Box<dyn Iterator<Item = Vec<_>>>
     }
 
     // Else we just return <ENDIANNES> endiannes iterator
-    Box::new(iter_closure(*endiannes)) as Box<dyn Iterator<Item = Vec<u64>>>
+    Box::new(iter_closure(*endiannes)) as Box<dyn Iterator<Item = Vec<_>>>
 }
 
-pub fn extract_potential_instructions_from_binary(binary: &[u8], endiannes: &Endiannes, instr_len: &u64) -> Vec<u64> {
-    let extraction_function = match endiannes {
-        Endiannes::Big => match instr_len {
-            8 => from_be_bytes_8,
-            16 => from_be_bytes_16,
-            32 => from_be_bytes_32,
-            64 => from_be_bytes_64,
-            _ => unreachable!("Instr_len should only be one of [8, 16, 32, 64]")
-        },
-        Endiannes::Little => match instr_len {
-            8 => from_le_bytes_8,
-            16 => from_le_bytes_16,
-            32 => from_le_bytes_32,
-            64 => from_le_bytes_64,
-            _ => unreachable!("Instr_len should only be one of [8, 16, 32, 64]")
-        },
+pub fn extract_potential_instructions_from_binary<T: PrimInt + FromBytes>(binary: &[u8], endiannes: &Endiannes, instr_len: &u64) -> Vec<impl PrimInt>
+        where <T as FromBytes>::Output: PrimInt {
+        //where Vec<T>: FromIterator<<T as FromBytes>::Output> {
+    match endiannes {
+        Endiannes::Big => binary
+                            .chunks_exact((instr_len / 8) as usize)
+                            .map(T::from_be_bytes_mine)
+                            .collect(),
+        Endiannes::Little => binary
+                            .chunks_exact((instr_len / 8) as usize)
+                            .map(T::from_le_bytes_mine)
+                            .collect(),
         _ => unreachable!("This function should never be called with <UNKNOWN> endiannes")
-    };
-    
-    binary
-    .chunks_exact((instr_len / 8) as usize)
-    .map(extraction_function)
-    .collect()
+    }
 }
 
-fn from_be_bytes_64(data: &[u8]) -> u64 {
-    u64::from_be_bytes(data.try_into().unwrap())
+pub trait FromBytes {
+    type Output;
+    fn from_be_bytes_mine(data: &[u8]) -> Self::Output;
+    fn from_le_bytes_mine(data: &[u8]) -> Self::Output;
 }
 
-fn from_be_bytes_32(data: &[u8]) -> u64 {
-    u32::from_be_bytes(data.try_into().unwrap()) as u64
+impl FromBytes for u8 {
+    type Output = u8;
+    fn from_be_bytes_mine(data: &[u8]) -> u8 {
+        u8::from_be_bytes(data.try_into().unwrap())
+    }
+    fn from_le_bytes_mine(data: &[u8]) -> u8 {
+        u8::from_le_bytes(data.try_into().unwrap())
+    }
 }
 
-fn from_be_bytes_16(data: &[u8]) -> u64 {
-    u16::from_be_bytes(data.try_into().unwrap()) as u64
+impl FromBytes for u16 {
+    type Output = u16;
+    fn from_be_bytes_mine(data: &[u8]) -> u16 {
+        u16::from_be_bytes(data.try_into().unwrap())
+    }
+    fn from_le_bytes_mine(data: &[u8]) -> u16 {
+        u16::from_le_bytes(data.try_into().unwrap())
+    }
 }
 
-fn from_be_bytes_8(data: &[u8]) -> u64 {
-    u8::from_be_bytes(data.try_into().unwrap()) as u64
+impl FromBytes for u32 {
+    type Output = u32;
+    fn from_be_bytes_mine(data: &[u8]) -> u32 {
+        u32::from_be_bytes(data.try_into().unwrap())
+    }
+    fn from_le_bytes_mine(data: &[u8]) -> u32 {
+        u32::from_le_bytes(data.try_into().unwrap())
+    }
 }
 
-fn from_le_bytes_64(data: &[u8]) -> u64 {
-    u64::from_le_bytes(data.try_into().unwrap())
-}
-
-fn from_le_bytes_32(data: &[u8]) -> u64 {
-    u32::from_le_bytes(data.try_into().unwrap()) as u64
-}
-
-fn from_le_bytes_16(data: &[u8]) -> u64 {
-    u16::from_le_bytes(data.try_into().unwrap()) as u64
-}
-
-fn from_le_bytes_8(data: &[u8]) -> u64 {
-    u8::from_le_bytes(data.try_into().unwrap()) as u64
+impl FromBytes for u64 {
+    type Output = u64;
+    fn from_be_bytes_mine(data: &[u8]) -> u64 {
+        u64::from_be_bytes(data.try_into().unwrap())
+    }
+    fn from_le_bytes_mine(data: &[u8]) -> u64 {
+        u64::from_le_bytes(data.try_into().unwrap())
+    }
 }
 
 #[cfg(test)]
@@ -106,57 +113,3 @@ mod tests {
         assert_eq!(1, 1)
     }
 }
-
-
-
-// Maybe this will work
-// https://crates.io/crates/enum_dispatch
-// allows to call methods for enum variants
-// pub enum InstrLen2 {
-//     L16,
-//     L32
-// }
-
-// trait ToBeBytes2 {
-//     fn to_be_bytes(&self, data: &[u8]) -> u64;
-// }
-
-// impl ToBeBytes2 for InstrLen2::L16 {
-//     fn to_be_bytes(&self, data: &[u8]) -> u64 {
-//         return u16::from_be_bytes(data.try_into().unwrap()) as u64;
-//     }
-// }
-
-
-
-
-// Idea how to use enum instead for length of vec
-// pub enum InstrLen { // RENAME INSTRUCTIONLENGTH
-//     L8(u8), 
-//     L16(u16),
-//     L32(u32),
-//     L64(u64)
-// }
-
-// trait Serializer{
-//     fn from_be_bytes(data: &[u8], instr_len: InstrLen) -> InstrLen;
-// }
-// impl Serializer for InstrLen
-// {
-//     fn from_be_bytes(data: &[u8], instr_len: InstrLen) -> InstrLen
-//     {
-//         match instr_len {
-//             InstrLen::L16(_) => InstrLen::L16(u16::from_be_bytes(data.try_into().unwrap())),
-//             _ => panic!("Not implemented")
-//         }
-//         //InstrLen::L16(u16::from_be_bytes(data.try_into().unwrap()))
-//     }
-// }
-
-// pub fn read_instructions_from_file(file_path: &str) -> Vec<InstrLen> {
-//     std::fs::read(file_path)
-//         .unwrap()
-//         .chunks_exact(2)
-//         .map(|x| InstrLen::from_be_bytes(x, InstrLen::L16(0)))
-//         .collect()
-// }

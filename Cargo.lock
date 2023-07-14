@@ -64,6 +64,7 @@ dependencies = [
  "clap",
  "clap-num",
  "itertools",
+ "num-traits",
  "rustc-hash",
 ]
 
