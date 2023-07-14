@@ -50,7 +50,7 @@ pub fn main_generic_over_instruction_length<T: FromBytes>(config: Config)
                     // Another thing to check is valid_edges.map(|from, to| to).unique() / ret_count
                     // I.e amount of returns hit
                     let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
-                    println!("FOUND HIGH PROBABILITY {}, {:#06x} {:#06x}, potential {}, valid {}, ret_hits {}", probability, call_candidate, ret_candidate, potential_edges.len(), valid_edges.len(), ret_hits as f64 / ret_count as f64);
+                    println!("FOUND HIGH PROBABILITY {}, {:#06x} {:#06x}, potential {}, valid {}, ratio_valid {:.3}, ratio_pot {:.3}, call_count {}, ret_hits {:.3}", probability, call_candidate, ret_candidate, potential_edges.len(), valid_edges.len(), ratio_valid, ratio_potential,call_count, ret_hits as f64 / ret_count as f64);
                 }
                 // if call_candidate == 0x94000000 && ret_candidate.clone() == 0xD65F03C0 {
                 //     println!("FOUND IT, prob {}, len_potential {} len_valid{}", probability, potential_edges.len(), valid_edges.len());

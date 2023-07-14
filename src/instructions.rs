@@ -18,18 +18,26 @@ pub fn call_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u
     
     // OPTION 1, simple solution with FxHasher
     let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
-    for instr in instructions {
+    let idx = instructions.len() / 5;
+    for instr in &instructions[idx..idx*2] {
         counts.entry(instr.to_u64().unwrap() & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
 
-    counts
+    let mut a: FxHashMap<u64, usize> = counts
         .into_iter()
         .filter(|(c, _)| c > &1)
         .sorted_by_key(|&(_, count)| count)
         .rev()
         .skip(call_search_range[0])
         .take(call_search_range[1])
-        .collect()
+        .map(|(k, _)| (k, 0))
+        .collect();
+
+    for instr in instructions {
+        a.entry(instr.to_u64().unwrap() & call_opcode_mask).and_modify(|e| *e += 1);
+    }
+
+    a.into_iter().collect()
 
     // OPTION 2: BtreeMap instead of HashMap, slower by ~40% when testing on curl_aarch64 binary
 
@@ -77,17 +85,25 @@ pub fn ret_candidates(instructions: &[impl PrimInt], config: &Config) -> Vec<(u6
 
 
     let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(8192, Default::default());
-    for instr in instructions {
+    let idx = instructions.len() / 5;
+    for instr in &instructions[idx..idx*2] {
         counts.entry(instr.to_u64().unwrap() & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
-    counts
+    let mut a: FxHashMap<u64, usize> = counts
         .into_iter()
-        .filter(|(_, c)| c > &1) // Optimization, most instructions are unique, not need to consider them as return instruction
+        .filter(|(c, _)| c > &1)
         .sorted_by_key(|&(_, count)| count)
         .rev()
         .skip(ret_search_range[0])
         .take(ret_search_range[1])
-        .collect()
+        .map(|(k, _)| (k, 0))
+        .collect();
+
+    for instr in instructions {
+        a.entry(instr.to_u64().unwrap() & ret_opcode_mask).and_modify(|e| *e += 1);
+    }
+
+    a.into_iter().collect()
 }
 
 // TODO move to file call_edges.rs and have call edges struct
