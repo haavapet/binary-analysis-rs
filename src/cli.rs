@@ -67,8 +67,8 @@ pub struct Parameters {
     #[arg(long, default_value="5")]
     pub ret_func_dist: usize,
     
-    #[arg(long, default_value="false", conflicts_with="file_offset")] // num_args=0??
-    pub unknown_code_entry: bool,
+    #[arg(long, default_value="false")]
+    pub parallell: bool,
 
     #[arg(long, default_value="false")]
     pub include_instructions: bool,

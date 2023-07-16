@@ -20,7 +20,7 @@ pub struct Config {
     pub call_search_range: [usize; 2],
     pub ret_search_range: [usize; 2],
     pub ret_func_dist: usize,
-    pub unknown_code_entry: bool,
+    pub parallell: bool,
     pub include_instructions: bool,
     pub is_absolute_addressing: bool,
 }
@@ -43,7 +43,7 @@ impl Config {
                                     call_search_range, 
                                     ret_search_range, 
                                     ret_func_dist, 
-                                    unknown_code_entry, 
+                                    parallell, 
                                     include_instructions, 
                                     is_absolute_addressing} = crate::cli::parse_parameters();
 
@@ -64,8 +64,6 @@ impl Config {
 
         let file_offset: [usize; 2] = if let Some(value) = file_offset {
             value.try_into().unwrap()
-        } else if unknown_code_entry { 
-            unimplemented!();
         } else {
             [0, read_file_len(&file_path)]
         };
@@ -87,7 +85,7 @@ impl Config {
             call_search_range: call_search_range.try_into().unwrap(), 
             ret_search_range: ret_search_range.try_into().unwrap(), 
             ret_func_dist, 
-            unknown_code_entry, 
+            parallell, 
             include_instructions, 
             is_absolute_addressing 
         }
