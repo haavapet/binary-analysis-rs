@@ -3,10 +3,9 @@ use crate::prelude::*;
 pub fn iter_potential_instruction_configuration<'a>(binary: &'a [u8], config: &'a Config) -> impl Iterator<Item = (&'a [u8], &'a Endiannes)> {
     let instr_byte_len = (config.instr_len / BYTE_SIZE) as usize;
 
-    // TODO handle file offset, probably as simple as indexing binary below
     (0..instr_byte_len).filter_map(move |i| match i.cmp(&(instr_byte_len)) {
         std::cmp::Ordering::Less => match config.endiannes {
-            Endiannes::Big | Endiannes::Little => Some((&binary[i..], &config.endiannes)),
+            Endiannes::Big | Endiannes::Little => Some((&binary[config.file_offset[0] + i..config.file_offset[1]], &config.endiannes)),
             Endiannes::Unknown => todo!("Handle unknown endiannes")
         }
         _ => None
