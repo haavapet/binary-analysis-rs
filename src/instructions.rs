@@ -16,7 +16,7 @@ pub fn call_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) ->
     for instr in iter_instructions(binary, endiannes, config.instr_len) {
         counts.entry(instr & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
     }
-    
+
     counts
         .into_iter()
         .filter(|(c, _)| c > &1)
