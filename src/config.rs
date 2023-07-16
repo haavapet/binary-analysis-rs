@@ -55,7 +55,7 @@ impl Config {
             unimplemented!("Need to handle bitmasks when the additional parameters are provided");
         };
         let col = call_opcode_len.unwrap();
-        let temp = (1 << instr_len) - 1; //, need to handle overflow, do u64::max if 64 instr_len?
+        let temp = u64::MAX; //, need to handle overflow, do u64::max if 64 instr_len?
         let call_opcode_mask: u64 = (temp) ^ ((1 << (instr_len - col)) - 1);
         let call_operand_mask: u64 = (1 << (instr_len - col)) - 1;
         let ret_opcode_mask: u64 = temp;
