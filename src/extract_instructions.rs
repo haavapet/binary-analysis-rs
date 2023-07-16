@@ -58,19 +58,29 @@ pub fn extract_potential_instructions_from_binary<T: FromBytes>(binary: &[u8], e
                                 .collect(),
         _ => unreachable!("This function should never be called with <UNKNOWN> endiannes")
     }
-}
+}  
 
 pub trait FromBytes {
     type Output;
     fn from_be_bytes_mine(data: &[u8]) -> Self::Output;
     fn from_le_bytes_mine(data: &[u8]) -> Self::Output;
+    fn from_bytes(data: &[u8], endiannes: &Endiannes) -> Self::Output;
 }
 
 impl FromBytes for u8 {
     type Output = u8;
+    fn from_bytes(data: &[u8], endiannes: &Endiannes) -> u8 {
+        if let Endiannes::Big = endiannes {
+            u8::from_be_bytes(data.try_into().unwrap())
+        } else {
+            u8::from_le_bytes(data.try_into().unwrap())
+        }
+    }
+
     fn from_be_bytes_mine(data: &[u8]) -> u8 {
         u8::from_be_bytes(data.try_into().unwrap())
     }
+
     fn from_le_bytes_mine(data: &[u8]) -> u8 {
         u8::from_le_bytes(data.try_into().unwrap())
     }
@@ -78,6 +88,13 @@ impl FromBytes for u8 {
 
 impl FromBytes for u16 {
     type Output = u16;
+    fn from_bytes(data: &[u8], endiannes: &Endiannes) -> u16 {
+        if let Endiannes::Big = endiannes {
+            u16::from_be_bytes(data.try_into().unwrap())
+        } else {
+            u16::from_le_bytes(data.try_into().unwrap())
+        }
+    }
     fn from_be_bytes_mine(data: &[u8]) -> u16 {
         u16::from_be_bytes(data.try_into().unwrap())
     }
@@ -88,6 +105,13 @@ impl FromBytes for u16 {
 
 impl FromBytes for u32 {
     type Output = u32;
+    fn from_bytes(data: &[u8], endiannes: &Endiannes) -> u32 {
+        if let Endiannes::Big = endiannes {
+            u32::from_be_bytes(data.try_into().unwrap())
+        } else {
+            u32::from_le_bytes(data.try_into().unwrap())
+        }
+    }
     fn from_be_bytes_mine(data: &[u8]) -> u32 {
         u32::from_be_bytes(data.try_into().unwrap())
     }
@@ -98,6 +122,13 @@ impl FromBytes for u32 {
 
 impl FromBytes for u64 {
     type Output = u64;
+    fn from_bytes(data: &[u8], endiannes: &Endiannes) -> u64 {
+        if let Endiannes::Big = endiannes {
+            u64::from_be_bytes(data.try_into().unwrap())
+        } else {
+            u64::from_le_bytes(data.try_into().unwrap())
+        }
+    }
     fn from_be_bytes_mine(data: &[u8]) -> u64 {
         u64::from_be_bytes(data.try_into().unwrap())
     }
