@@ -40,7 +40,7 @@ pub struct Parameters {
     pub file_offset: Option<Vec<usize>>,
 
     // position of first instruction in virtual memory, needed for absolute addressing
-    #[arg(long, default_value="0x4000000", value_parser=maybe_hex::<u64>)]
+    #[arg(long, default_value="0x400000", value_parser=maybe_hex::<u64>)]
     pub pc_offset: u64,
 
     // Relative adress difference between consecutive instructions, defaults to instr_len / 8
