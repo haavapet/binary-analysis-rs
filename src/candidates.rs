@@ -18,7 +18,7 @@ pub fn call_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) ->
     counts
         .into_iter()
         .filter(|(c, _)| c > &10)
-        .sorted_by_key(|&(_, count)| count)
+        .sorted_unstable_by_key(|&(_, count)| count)
         .rev()
         .skip(call_search_range[0])
         .take(call_search_range[1])
@@ -62,7 +62,7 @@ pub fn ret_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) -> 
     counts
         .into_iter()
         .filter(|(_, c)| c > &10) // Optimization, most instructions are unique, not need to consider them as return instruction
-        .sorted_by_key(|&(_, count)| count)
+        .sorted_unstable_by_key(|&(_, count)| count)
         .rev()
         .skip(ret_search_range[0])
         .take(ret_search_range[1])
