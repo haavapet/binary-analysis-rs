@@ -28,8 +28,6 @@ pub fn find_potential_edges(binary: &[u8], call_candidate: u64, config: &Config,
             }
         }
     } else {
-        let mut potential_edges: Vec<(usize, usize)> = Vec::new();
-
         for (i, instr) in iter_instructions(binary, endiannes, config.instr_len).enumerate() {
             if instr & call_opcode_mask == call_candidate {
                 let call_operand = (instr & call_operand_mask) as i64;
