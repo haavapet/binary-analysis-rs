@@ -8,7 +8,9 @@ mod config;
 mod endiannes;
 
 use rayon::prelude::*;
-use itertools::Itertools;
+use std::{collections::BinaryHeap, cmp::Reverse};
+use ordered_float::NotNan;
+use std::sync::{Arc, Mutex};
 
 use prelude::*;
 use iter_instructions::iter_potential_instruction_configuration;
@@ -24,22 +26,27 @@ fn main() {
 
     println!("Starting analysis of file length: {}", binary.len());
 
+    // TODO this type should be abstracted away, and not use arc mutex stuff when not parallell
+    let top_candidates: Arc<Mutex<BinaryHeap<Reverse<NotNan<f64>>>>> = Arc::new(Mutex::new(Default::default()));
+
     // Synchronous
     if !config.parallell {
-        for (binary_slice, endiannes) in iter_potential_instruction_configuration(&binary, &config) {
-            analyse_instructions(binary_slice, &config, endiannes)
+        for (binary_slice, endiannes) in iter_potential_instruction_configuration(&binary, &config) {  
+            analyse_instructions(binary_slice, &config, endiannes, &top_candidates)
         }
     } 
     // Parralell, speedup ~ min(num_cores, instr_byte_len), i.e given 32 bit instr and modern pc => 4x speedup
     else {
         iter_potential_instruction_configuration(&binary, &config).collect::<Vec<_>>().par_iter().for_each(|(binary_slice, endiannes)| {
-            analyse_instructions(binary_slice, &config, endiannes)
-        })
+            analyse_instructions(binary_slice, &config, endiannes, &top_candidates)
+        });
     }
 
+    // We now have the top candidates, we can create a call graph, print the top candidates etc etc.
+    println!("{:?}", top_candidates.lock().unwrap().clone().into_sorted_vec());
 }
 
-fn analyse_instructions(binary_slice: &[u8], config: &Config, endiannes: &Endiannes) {
+fn analyse_instructions(binary_slice: &[u8], config: &Config, endiannes: &Endiannes, top_candidates: &Arc<Mutex<BinaryHeap<Reverse<NotNan<f64>>>>>) {
 
     // We assume call instruction is among call candidates, and ret instruction for ret_candidates
     let call_cand = call_candidates(binary_slice, config, endiannes);
@@ -59,12 +66,25 @@ fn analyse_instructions(binary_slice: &[u8], config: &Config, endiannes: &Endian
             let ratio_valid: f64 = valid_edges.len() as f64 / call_count as f64;
             let ratio_potential = potential_edges.len() as f64 / call_count as f64;
             let probability = ((2.0 * ratio_valid) + ratio_potential) / 3.0;
-            if probability > 0.5 {
-                // Another thing to check is valid_edges.map(|from, to| to).unique() / ret_count
-                // I.e amount of returns hit
-                let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
-                println!("FOUND HIGH PROBABILITY {}, {:#06x} {:#06x}, potential {}, valid {}, ret_hits {}", probability, call_candidate, ret_candidate, potential_edges.len(), valid_edges.len(), ret_hits as f64 / ret_count as f64);
+
+            // TODO abstract this away and only have a 'top_candidates.maybe_add(prob)'
+            {
+                let mut heap = top_candidates.lock().unwrap();
+
+                heap.push(Reverse(NotNan::new(probability).unwrap()));
+                
+                if heap.len() > config.nr_cand {
+                    heap.pop();
+                } 
             }
+
+            // if probability > 0.5 {
+            //     // Another thing to check is valid_edges.map(|from, to| to).unique() / ret_count
+            //     // I.e amount of returns hit
+            //     use itertools::Itertools;      
+            //     let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
+            //     println!("FOUND HIGH PROBABILITY {}, {:#06x} {:#06x}, potential {}, valid {}, ret_hits {}", probability, call_candidate, ret_candidate, potential_edges.len(), valid_edges.len(), ret_hits as f64 / ret_count as f64);
+            // }
         }
     }
 }

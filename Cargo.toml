@@ -11,6 +11,7 @@ clap-num = "1.0.2"
 itertools = "0.11.0"
 rustc-hash = "1.1.0"
 rayon = "1.7.0"
+ordered-float = "1.0.1"
 
 [profile.release]
 debug = true
