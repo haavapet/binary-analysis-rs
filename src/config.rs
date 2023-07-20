@@ -1,4 +1,4 @@
-use crate::{prelude::*, file::read_file_len};
+use crate::{file::read_file_len, prelude::*};
 
 // This struct is added because the cli.rs struct is bloated. I.e the masks in this struct are a combination
 // of fields from the other struct, which we do not need individually.
@@ -28,30 +28,35 @@ pub struct Config {
 impl Config {
     pub fn get() -> Config {
         // Deconstruct so that if adding more fields we get an error
-        let crate::cli::Parameters {file_path, 
-                                    call_opcode_len, 
-                                    instr_len, 
-                                    endiannes, 
-                                    ret_opcode_index, 
-                                    call_opcode_index,
-                                    call_operand_index, 
-                                    file_offset, 
-                                    pc_offset, 
-                                    pc_inc, 
-                                    left_shift_call_operand, 
-                                    nr_cand, 
-                                    call_search_range, 
-                                    ret_search_range, 
-                                    ret_func_dist, 
-                                    parallell, 
-                                    include_instructions, 
-                                    is_absolute_addressing} = crate::cli::parse_parameters();
+        let crate::cli::Parameters {
+            file_path,
+            call_opcode_len,
+            instr_len,
+            endiannes,
+            ret_opcode_index,
+            call_opcode_index,
+            call_operand_index,
+            file_offset,
+            pc_offset,
+            pc_inc,
+            left_shift_call_operand,
+            nr_cand,
+            call_search_range,
+            ret_search_range,
+            ret_func_dist,
+            parallell,
+            include_instructions,
+            is_absolute_addressing,
+        } = crate::cli::parse_parameters();
 
         // TODO: Handle parsing of parameters, i.e file_offset cannot be greater than file length,
         // instr_len only 8,16,32,64. indexes must be valid etc etc.
 
         if call_opcode_len.is_none() {
-            println!("USE {:?} {:?} {:?}", call_opcode_index, call_operand_index, ret_opcode_index);
+            println!(
+                "USE {:?} {:?} {:?}",
+                call_opcode_index, call_operand_index, ret_opcode_index
+            );
             unimplemented!("Need to handle bitmasks when the additional parameters are provided");
         };
         let col = call_opcode_len.unwrap();
@@ -61,33 +66,35 @@ impl Config {
         let ret_opcode_mask: u64 = temp;
         let call_operand_signed_mask: u64 = (1 << (instr_len - col - 1)) - 1;
 
-
         let file_offset: [usize; 2] = if let Some(value) = file_offset {
             value.try_into().unwrap()
         } else {
             [0, read_file_len(&file_path)]
         };
 
-
-        Config { 
-            file_path, 
-            instr_len, 
-            call_opcode_mask, 
-            ret_opcode_mask, 
+        Config {
+            file_path,
+            instr_len,
+            call_opcode_mask,
+            ret_opcode_mask,
             call_operand_mask,
-            call_operand_signed_mask, 
-            endiannes, 
-            file_offset, 
-            pc_offset, 
-            pc_inc: if let Some(value) = pc_inc {value} else {instr_len / BYTE_SIZE}, 
-            left_shift_call_operand, 
-            nr_cand, 
-            call_search_range: call_search_range.try_into().unwrap(), 
-            ret_search_range: ret_search_range.try_into().unwrap(), 
-            ret_func_dist, 
-            parallell, 
-            include_instructions, 
-            is_absolute_addressing 
+            call_operand_signed_mask,
+            endiannes,
+            file_offset,
+            pc_offset,
+            pc_inc: if let Some(value) = pc_inc {
+                value
+            } else {
+                instr_len / BYTE_SIZE
+            },
+            left_shift_call_operand,
+            nr_cand,
+            call_search_range: call_search_range.try_into().unwrap(),
+            ret_search_range: ret_search_range.try_into().unwrap(),
+            ret_func_dist,
+            parallell,
+            include_instructions,
+            is_absolute_addressing,
         }
     }
 }

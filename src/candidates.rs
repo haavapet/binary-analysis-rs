@@ -6,13 +6,19 @@ use crate::iter_instructions::iter_instructions;
 
 pub fn call_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
-    let &Config { call_opcode_mask, 
-                 call_search_range,
-                 .. } = config;
+    let &Config {
+        call_opcode_mask,
+        call_search_range,
+        ..
+    } = config;
 
-    let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
+    let mut counts: FxHashMap<u64, usize> =
+        FxHashMap::with_capacity_and_hasher(1024, Default::default());
     for instr in iter_instructions(binary, endiannes, config.instr_len) {
-        counts.entry(instr & call_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
+        counts
+            .entry(instr & call_opcode_mask)
+            .and_modify(|e| *e += 1)
+            .or_insert(1);
     }
 
     counts
@@ -27,22 +33,27 @@ pub fn call_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) ->
 
 pub fn ret_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) -> Vec<(u64, usize)> {
     // Destructure CLI params we need
-    let &Config { ret_opcode_mask, 
-                 ret_search_range,
-                 .. } = config;
+    let &Config {
+        ret_opcode_mask,
+        ret_search_range,
+        ..
+    } = config;
 
-    
     // Super nice optimization, look at a subset if big file, find unique instructions in the subset,
     // Only put the ones found here in the count after, skip rest
     // Assumes that a ret instruction will be found in a subsize of the given size.
-    let counts: FxHashMap<u64, usize> = if binary.len() > 262144 /* 2 ^ 18 */ {
-        let mut potentials: FxHashSet<u64> = FxHashSet::with_capacity_and_hasher(8192, Default::default());
+    let counts: FxHashMap<u64, usize> = if binary.len() > 262144
+    /* 2 ^ 18 */
+    {
+        let mut potentials: FxHashSet<u64> =
+            FxHashSet::with_capacity_and_hasher(8192, Default::default());
         let index = (8192 * config.instr_len / BYTE_SIZE) as usize;
-        for instr in iter_instructions(&binary[index..index*2], endiannes, config.instr_len) {
+        for instr in iter_instructions(&binary[index..index * 2], endiannes, config.instr_len) {
             potentials.insert(instr & ret_opcode_mask);
         }
 
-        let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
+        let mut counts: FxHashMap<u64, usize> =
+            FxHashMap::with_capacity_and_hasher(1024, Default::default());
         for instr in iter_instructions(binary, endiannes, config.instr_len) {
             let instr = instr & ret_opcode_mask;
             if potentials.contains(&instr) {
@@ -52,13 +63,17 @@ pub fn ret_candidates(binary: &[u8], config: &Config, endiannes: &Endiannes) -> 
         counts
     } else {
         // OPTION 1, simple solution with FxHasher
-        let mut counts: FxHashMap<u64, usize> = FxHashMap::with_capacity_and_hasher(1024, Default::default());
+        let mut counts: FxHashMap<u64, usize> =
+            FxHashMap::with_capacity_and_hasher(1024, Default::default());
         for instr in iter_instructions(binary, endiannes, config.instr_len) {
-            counts.entry(instr & ret_opcode_mask).and_modify(|e| *e += 1).or_insert(1);
+            counts
+                .entry(instr & ret_opcode_mask)
+                .and_modify(|e| *e += 1)
+                .or_insert(1);
         }
         counts
     };
-    
+
     counts
         .into_iter()
         .filter(|(_, c)| c > &10) // Optimization, most instructions are unique, not need to consider them as return instruction

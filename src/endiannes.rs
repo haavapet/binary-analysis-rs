@@ -4,5 +4,5 @@ use clap::ValueEnum;
 pub enum Endiannes {
     Little,
     Big,
-    Unknown
+    Unknown,
 }
