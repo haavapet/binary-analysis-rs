@@ -65,7 +65,7 @@ fn analyse_instructions(
         // Valid addresses for instructions of the given call candidates
         let potential_edges = find_potential_edges(binary_slice, call_candidate, config, endiannes);
 
-        for &(ret_candidate, ret_count) in ret_cand.iter() {
+        for &(ret_candidate, _ret_count) in ret_cand.iter() {
             // valid addresses where there is a return preceding it
             let valid_edges = filter_valid_edges(
                 binary_slice,

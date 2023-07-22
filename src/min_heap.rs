@@ -20,7 +20,7 @@ impl Eq for Candidate {}
 
 impl PartialOrd for Candidate {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(&other)) // Delegate to the implementation in `Ord`.
+        Some(self.cmp(other)) // Delegate to the implementation in `Ord`.
     }
 }
 
