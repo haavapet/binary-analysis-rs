@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use candidates_opcodes::{call_candidates, ret_candidates};
 use edges::{filter_valid_edges, find_potential_edges};
 use iter_instructions::iter_potential_instruction_configuration;
-use min_heap::MinHeap;
+use min_heap::{Candidate, MinHeap};
 use prelude::*;
 
 fn main() {
@@ -21,9 +21,6 @@ fn main() {
 
     let binary = file::read_file(&config);
 
-    println!("Starting analysis of file length: {}", binary.len());
-
-    // TODO this type should be abstracted away, and not use arc mutex stuff when not parallell
     let mut top_candidates: MinHeap = Default::default();
 
     // Synchronous
@@ -44,9 +41,12 @@ fn main() {
     }
 
     // We now have the top candidates, we can create a call graph, print the top candidates etc etc.
-    // TODO this should get more info than just probability, probably call and ret opcode etc etc
-    for prob in top_candidates.get_result() {
-        println!("{}", prob)
+    println!("RESULTS:");
+    for candidate in top_candidates.get_result() {
+        println!(
+            "Prob: {:.4} \tCall: {:#08x}\tRet: {:#08x}",
+            candidate.probability, candidate.call_opcode, candidate.ret_opcode
+        )
     }
 }
 
@@ -79,17 +79,18 @@ fn analyse_instructions(
             let ratio_valid: f64 = valid_edges.len() as f64 / call_count as f64;
             let ratio_potential = potential_edges.len() as f64 / call_count as f64;
             let probability = ((2.0 * ratio_valid) + ratio_potential) / 3.0;
-
-            // Add to heap if high probability
-            top_candidates.add_maybe(config.nr_cand, probability)
-
-            // if probability > 0.5 {
-            //     // Another thing to check is valid_edges.map(|from, to| to).unique() / ret_count
-            //     // I.e amount of returns hit
             //     use itertools::Itertools;
             //     let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
-            //     println!("FOUND HIGH PROBABILITY {}, {:#06x} {:#06x}, potential {}, valid {}, ret_hits {}", probability, call_candidate, ret_candidate, potential_edges.len(), valid_edges.len(), ret_hits as f64 / ret_count as f64);
-            // }
+
+            // Add to heap if high probability
+            top_candidates.add_maybe(
+                config.nr_cand,
+                Candidate {
+                    probability,
+                    call_opcode: call_candidate,
+                    ret_opcode: ret_candidate,
+                },
+            )
         }
     }
 }
