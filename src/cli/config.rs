@@ -28,7 +28,7 @@ pub struct Config {
 impl Config {
     pub fn get() -> Config {
         // Deconstruct so that if adding more fields we get an error
-        let crate::cli::Parameters {
+        let crate::cli::cli_clap::Parameters {
             file_path,
             call_opcode_len,
             instr_len,
@@ -47,7 +47,7 @@ impl Config {
             parallell,
             include_instructions,
             is_absolute_addressing,
-        } = crate::cli::parse_parameters();
+        } = crate::cli::cli_clap::parse_parameters();
 
         // TODO: Handle parsing of parameters, i.e file_offset cannot be greater than file length,
         // instr_len only 8,16,32,64. indexes must be valid etc etc.

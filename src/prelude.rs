@@ -1,5 +1,5 @@
-pub use crate::config::Config;
-pub use crate::endiannes::Endiannes;
+pub use crate::cli::config::Config;
+pub use crate::cli::endiannes::Endiannes;
 pub use std::path::PathBuf;
 // TODO add INSTR_LEN if we do that
 

@@ -1,8 +1,6 @@
 mod candidates;
 mod cli;
-mod config;
 mod edges;
-mod endiannes;
 mod file;
 mod iter_instructions;
 mod prelude;
