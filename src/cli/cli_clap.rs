@@ -30,6 +30,9 @@ pub struct Parameters {
     #[arg(short = 'e', long, default_value = "unknown", value_enum)]
     pub endiannes: Endiannes,
 
+    #[arg(short = 'a', long, default_value = "unknown", value_enum)]
+    pub addressing_mode: AddressingMode,
+
     // If one needs to be more explicit about which bits are part of return opcode
     #[arg(
         long,
@@ -104,9 +107,6 @@ pub struct Parameters {
 
     #[arg(long, default_value = "false")]
     pub include_instructions: bool,
-
-    #[arg(long, default_value = "false")]
-    pub is_absolute_addressing: bool,
 }
 
 pub fn parse_parameters() -> Parameters {

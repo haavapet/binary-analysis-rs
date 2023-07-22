@@ -1,3 +1,4 @@
+pub use crate::cli::addressing_mode::AddressingMode;
 pub use crate::cli::config::Config;
 pub use crate::cli::endiannes::Endiannes;
 pub use std::path::PathBuf;

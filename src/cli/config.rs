@@ -12,6 +12,7 @@ pub struct Config {
     pub call_operand_mask: u64,
     pub call_operand_signed_mask: u64,
     pub endiannes: Endiannes,
+    pub addressing_mode: AddressingMode,
     pub file_offset: [usize; 2],
     pub pc_offset: u64,
     pub pc_inc: u64,
@@ -22,7 +23,6 @@ pub struct Config {
     pub ret_func_dist: usize,
     pub parallell: bool,
     pub include_instructions: bool,
-    pub is_absolute_addressing: bool,
 }
 
 impl Config {
@@ -33,6 +33,7 @@ impl Config {
             call_opcode_len,
             instr_len,
             endiannes,
+            addressing_mode,
             ret_opcode_index,
             call_opcode_index,
             call_operand_index,
@@ -46,7 +47,6 @@ impl Config {
             ret_func_dist,
             parallell,
             include_instructions,
-            is_absolute_addressing,
         } = crate::cli::cli_clap::parse_parameters();
 
         // TODO: Handle parsing of parameters, i.e file_offset cannot be greater than file length,
@@ -80,6 +80,7 @@ impl Config {
             call_operand_mask,
             call_operand_signed_mask,
             endiannes,
+            addressing_mode,
             file_offset,
             pc_offset,
             pc_inc: if let Some(value) = pc_inc {
@@ -94,7 +95,6 @@ impl Config {
             ret_func_dist,
             parallell,
             include_instructions,
-            is_absolute_addressing,
         }
     }
 }

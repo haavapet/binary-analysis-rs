@@ -4,7 +4,7 @@ use itertools::iproduct;
 pub fn iter_potential_instruction_configuration<'a>(
     binary: &'a [u8],
     config: &'a Config,
-) -> impl Iterator<Item = (&'a [u8], &'a Endiannes)> {
+) -> impl Iterator<Item = (&'a [u8], &'a Endiannes, &'a AddressingMode)> {
     let instr_byte_len = (config.instr_len / BYTE_SIZE) as usize;
 
     let endiannes = if let Endiannes::Unknown = config.endiannes {
@@ -13,17 +13,24 @@ pub fn iter_potential_instruction_configuration<'a>(
         vec![&config.endiannes]
     };
 
+    let addressing_mode = if let AddressingMode::Unknown = config.addressing_mode {
+        vec![&AddressingMode::Relative, &AddressingMode::Absolute]
+    } else {
+        vec![&config.addressing_mode]
+    };
+
     // TODO also add addressing mode
 
-    iproduct!((0..instr_byte_len), endiannes).filter_map(move |(byte_index, endiannes)| {
-        match byte_index.cmp(&(instr_byte_len)) {
+    iproduct!((0..instr_byte_len), endiannes, addressing_mode).filter_map(
+        move |(byte_index, endiannes, addressing_mode)| match byte_index.cmp(&(instr_byte_len)) {
             std::cmp::Ordering::Less => Some((
                 &binary[config.file_offset[0] + byte_index..config.file_offset[1]],
                 endiannes,
+                addressing_mode,
             )),
             _ => unreachable!(),
-        }
-    })
+        },
+    )
 }
 
 pub fn iter_instructions<'a>(

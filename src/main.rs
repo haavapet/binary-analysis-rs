@@ -25,9 +25,16 @@ fn main() {
 
     // Synchronous
     if !config.parallell {
-        for (binary_slice, endiannes) in iter_potential_instruction_configuration(&binary, &config)
+        for (binary_slice, endiannes, addressing_mode) in
+            iter_potential_instruction_configuration(&binary, &config)
         {
-            analyse_instructions(binary_slice, &config, endiannes, &top_candidates)
+            analyse_instructions(
+                binary_slice,
+                &config,
+                endiannes,
+                addressing_mode,
+                &top_candidates,
+            )
         }
     }
     // Parralell, speedup ~ min(num_cores, instr_byte_len), i.e given 32 bit instr and modern pc => 4x speedup
@@ -35,8 +42,14 @@ fn main() {
         iter_potential_instruction_configuration(&binary, &config)
             .collect::<Vec<_>>()
             .par_iter()
-            .for_each(|(binary_slice, endiannes)| {
-                analyse_instructions(binary_slice, &config, endiannes, &top_candidates)
+            .for_each(|(binary_slice, endiannes, addressing_mode)| {
+                analyse_instructions(
+                    binary_slice,
+                    &config,
+                    endiannes,
+                    addressing_mode,
+                    &top_candidates,
+                )
             });
     }
 
@@ -55,6 +68,7 @@ fn analyse_instructions(
     binary_slice: &[u8],
     config: &Config,
     endiannes: &Endiannes,
+    addressing_mode: &AddressingMode,
     top_candidates: &MinHeap,
 ) {
     // We assume call instruction is among call candidates, and ret instruction for ret_candidates
@@ -63,7 +77,13 @@ fn analyse_instructions(
 
     for &(call_candidate, call_count) in call_cand.iter() {
         // Valid addresses for instructions of the given call candidates
-        let potential_edges = find_potential_edges(binary_slice, call_candidate, config, endiannes);
+        let potential_edges = find_potential_edges(
+            binary_slice,
+            call_candidate,
+            config,
+            endiannes,
+            addressing_mode,
+        );
 
         for &(ret_candidate, _ret_count) in ret_cand.iter() {
             // valid addresses where there is a return preceding it

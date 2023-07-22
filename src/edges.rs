@@ -9,6 +9,7 @@ pub fn find_potential_edges(
     call_candidate: u64,
     config: &Config,
     endiannes: &Endiannes,
+    addressing_mode: &AddressingMode,
 ) -> Vec<(usize, usize)> {
     // Destructure CLI params we need
     let &Config {
@@ -17,14 +18,13 @@ pub fn find_potential_edges(
         call_operand_signed_mask,
         pc_offset,
         left_shift_call_operand,
-        is_absolute_addressing,
         ..
     } = config;
 
     let call_operand_signed_mask = call_operand_signed_mask as i64;
     let mut potential_edges = Vec::new();
 
-    if is_absolute_addressing {
+    if let AddressingMode::Absolute = addressing_mode {
         for (i, instr) in iter_instructions(binary, endiannes, config.instr_len).enumerate() {
             if instr & call_opcode_mask == call_candidate {
                 let call_operand = instr & call_operand_mask;
@@ -37,7 +37,7 @@ pub fn find_potential_edges(
                 }
             }
         }
-    } else {
+    } else if let AddressingMode::Relative = addressing_mode {
         for (i, instr) in iter_instructions(binary, endiannes, config.instr_len).enumerate() {
             if instr & call_opcode_mask == call_candidate {
                 let call_operand = (instr & call_operand_mask) as i64;
