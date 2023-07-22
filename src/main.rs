@@ -15,8 +15,6 @@ use min_heap::{Candidate, MinHeap};
 use prelude::*;
 
 fn main() {
-    // TODO iterate over both relative and absolute addressing?
-
     let config = Config::get();
 
     let binary = file::read_file(&config);
@@ -99,8 +97,8 @@ fn analyse_instructions(
             let ratio_valid: f64 = valid_edges.len() as f64 / call_count as f64;
             let ratio_potential = potential_edges.len() as f64 / call_count as f64;
             let probability = ((2.0 * ratio_valid) + ratio_potential) / 3.0;
-            //     use itertools::Itertools;
-            //     let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
+            //  use itertools::Itertools;
+            //  let ret_hits = valid_edges.iter().map(|(_, to)| to).unique().count();
 
             // Add to heap if high probability
             top_candidates.add_maybe(
