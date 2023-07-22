@@ -1,18 +1,17 @@
-mod candidates;
+mod candidates_opcodes;
 mod cli;
 mod edges;
 mod file;
 mod iter_instructions;
+mod min_heap;
 mod prelude;
 
-use ordered_float::NotNan;
 use rayon::prelude::*;
-use std::sync::{Arc, Mutex};
-use std::{cmp::Reverse, collections::BinaryHeap};
 
-use candidates::{call_candidates, ret_candidates};
+use candidates_opcodes::{call_candidates, ret_candidates};
 use edges::{filter_valid_edges, find_potential_edges};
 use iter_instructions::iter_potential_instruction_configuration;
+use min_heap::MinHeap;
 use prelude::*;
 
 fn main() {
@@ -25,8 +24,7 @@ fn main() {
     println!("Starting analysis of file length: {}", binary.len());
 
     // TODO this type should be abstracted away, and not use arc mutex stuff when not parallell
-    let top_candidates: Arc<Mutex<BinaryHeap<Reverse<NotNan<f64>>>>> =
-        Arc::new(Mutex::new(Default::default()));
+    let mut top_candidates: MinHeap = Default::default();
 
     // Synchronous
     if !config.parallell {
@@ -46,10 +44,10 @@ fn main() {
     }
 
     // We now have the top candidates, we can create a call graph, print the top candidates etc etc.
-    println!(
-        "{:?}",
-        top_candidates.lock().unwrap().clone().into_sorted_vec()
-    );
+    // TODO this should get more info than just probability, probably call and ret opcode etc etc
+    for prob in top_candidates.get_result() {
+        println!("{}", prob)
+    }
 }
 
 // TOdo move this to "analyse_binary.rs"
@@ -57,7 +55,7 @@ fn analyse_instructions(
     binary_slice: &[u8],
     config: &Config,
     endiannes: &Endiannes,
-    top_candidates: &Arc<Mutex<BinaryHeap<Reverse<NotNan<f64>>>>>,
+    top_candidates: &MinHeap,
 ) {
     // We assume call instruction is among call candidates, and ret instruction for ret_candidates
     let call_cand = call_candidates(binary_slice, config, endiannes);
@@ -82,16 +80,8 @@ fn analyse_instructions(
             let ratio_potential = potential_edges.len() as f64 / call_count as f64;
             let probability = ((2.0 * ratio_valid) + ratio_potential) / 3.0;
 
-            // TODO abstract this away and only have a 'top_candidates.maybe_add(prob)'
-            {
-                let mut heap = top_candidates.lock().unwrap();
-
-                heap.push(Reverse(NotNan::new(probability).unwrap()));
-
-                if heap.len() > config.nr_cand {
-                    heap.pop();
-                }
-            }
+            // Add to heap if high probability
+            top_candidates.add_maybe(config.nr_cand, probability)
 
             // if probability > 0.5 {
             //     // Another thing to check is valid_edges.map(|from, to| to).unique() / ret_count
