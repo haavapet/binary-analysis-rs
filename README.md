@@ -22,7 +22,7 @@ To install and use the Binary Analysis Tool, follow these straightforward steps:
 - Probability Metric: The tool utilizes a probability metric to prioritize the most promising results.
 - Custom Parameters: Users can input optional parameters like instruction length and endianness for tailored analysis.
 - Parallellization: Support for parallellization using the `--parallell` parameter
-- Speed: Faster than the [Python implementation](https://github.com/haavapet/binary-analysis) by ~100x. (10 minutes vs 6 seconds for a 50mb binary on a 5 year old intel laptop).
+- Speed: Faster than the [Python implementation](https://github.com/haavapet/binary-analysis) by ~100x. (10 minutes vs 6 seconds for a 50mb binary on a 5 year old intel laptop). The program has been heavily optimized using tools such as [HeapTrack](https://github.com/KDE/heaptrack) and [FlameGraph](https://github.com/flamegraph-rs/flamegraph).
 
 ## Usage
 
