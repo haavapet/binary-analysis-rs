@@ -1,6 +1,6 @@
 # 🦀 binary-analysis-rs 🚀
 
-![Build Status](https://github.com/havardp/binary-analysis-rs/actions/workflows/pipeline.yml/badge.svg)
+![Build Status](https://github.com/haavapet/binary-analysis-rs/actions/workflows/pipeline.yml/badge.svg)
 
 📝 Short description: binary-analysis-rs 🚀 is a Rust-based project that facilitates the analysis of binaries from unknown instruction set architectures. It accepts a binary file and several optional parameters, such as instruction length, to identify the most likely opcodes along with an associated probability rating.
 
