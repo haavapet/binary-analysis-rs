@@ -61,7 +61,7 @@ pub struct Parameters {
     pub call_operand_index: Option<Vec<u64>>,
 
     // start, end offset of .text segment of binary file
-    #[arg(long, number_of_values=2, required=false, value_parser=maybe_hex::<usize>, conflicts_with="unknown_code_entry")]
+    #[arg(long, number_of_values=2, required=false, value_parser=maybe_hex::<usize>)]
     pub file_offset: Option<Vec<usize>>,
 
     // position of first instruction in virtual memory, needed for absolute addressing
