@@ -40,7 +40,7 @@ To show a list of all parameters, run the program with the `--help` flag.
 
 ## How it Works
 
-The Binary Analysis Tool operates by employing a heuristic approach based on opcode frequency and operand inspection. By analyzing using parameters such as instruction length and endianness, the tool identifies the most likely call and return opcodes and calculates their probability rating. See the associated research paper for a more thorough analysis.
+The Binary Analysis Tool operates by employing a heuristic approach based on opcode frequency and operand inspection. By analyzing the binary using parameters such as instruction length and endianness, the tool identifies the most likely call and return opcodes and calculates their probability rating. See the associated research paper for a more thorough analysis.
 
 ## License
 
