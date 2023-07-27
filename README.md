@@ -4,16 +4,6 @@
 
 📝 Short description: binary-analysis-rs 🚀 is a Rust-based project that facilitates the analysis of binaries from unknown instruction set architectures. It accepts a binary file and several optional parameters, such as instruction length, to identify the most likely opcodes along with an associated probability rating.
 
-## Installation
-
-To install and use the Binary Analysis Tool, follow these straightforward steps:
-
-1. Clone the repository to your local machine.
-2. Ensure you have Rust installed on your system. If not, download it from [Rust's official website](https://www.rust-lang.org/).
-3. Navigate to the project directory using the terminal.
-4. Build the project by running `cargo build`.
-5. Execute the program with your binary file and desired parameters using `cargo run`.
-
 ## Features
 
 🔍 Key Features:
@@ -23,6 +13,16 @@ To install and use the Binary Analysis Tool, follow these straightforward steps:
 - Custom Parameters: Users can input optional parameters like instruction length and endianness for tailored analysis.
 - Parallellization: Support for parallellization using the `--parallell` parameter
 - Speed: Faster than the [Python implementation](https://github.com/haavapet/binary-analysis) by ~100x. (10 minutes vs 6 seconds for a 50mb binary on a 5 year old intel laptop). The program has been heavily optimized using tools such as [HeapTrack](https://github.com/KDE/heaptrack) and [FlameGraph](https://github.com/flamegraph-rs/flamegraph).
+
+## Installation
+
+To install and use the Binary Analysis Tool, follow these straightforward steps:
+
+1. Clone the repository to your local machine.
+2. Ensure you have Rust installed on your system. If not, download it from [Rust's official website](https://www.rust-lang.org/).
+3. Navigate to the project directory using the terminal.
+4. Build the project by running `cargo build`.
+5. Execute the program with your binary file and desired parameters using `cargo run`.
 
 ## Usage
 
