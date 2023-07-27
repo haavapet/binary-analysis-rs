@@ -28,11 +28,11 @@ To install and use the Binary Analysis Tool, follow these straightforward steps:
 
 The Binary Analysis Tool is simple and intuitive to use. Two example usages of the program are shown below.
 
-`cargo run --release -- <Path>/openvpn_mips -i 32 -c 6 -endiannes big --left-shift-call-operand 2 --addressing_mode absolute`
+`cargo run --release -- <Path>/openvpn_mips -i 32 -c 6 --endiannes big --left-shift-call-operand 2 --addressing-mode absolute`
 
 _Finds correct with probability 0.62_
 
-`cargo run --release -- <Path>/ffmpeg_aarch64 -i 32 -c 6 -endiannes little --left-shift-call-operand 2 --addressing_mode relative`
+`cargo run --release -- <Path>/ffmpeg_aarch64 -i 32 -c 6 --endiannes little --left-shift-call-operand 2 --addressing-mode relative`
 
 _Finds correct with probability 0.8_
 
