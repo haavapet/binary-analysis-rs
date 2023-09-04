@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     name: fmt
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install
         uses: dtolnay/rust-toolchain@stable
@@ -27,7 +27,7 @@ jobs:
       contents: read
       checks: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install
         uses: dtolnay/rust-toolchain@stable
